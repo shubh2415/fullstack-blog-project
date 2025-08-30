@@ -8,8 +8,25 @@ from datetime import datetime
 
 # --- App Initialization and Config ---
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
-BACKEND_BASE_URL = "http://localhost:5000"
+
+# ==================== CORS CONFIGURATION UPDATE ====================
+# यहाँ हमने आपके लाइव फ्रंटएंड URL's को जोड़ा है
+CORS(app,
+    resources={r"/api/*": {
+        "origins": [
+            "http://localhost:5173", # आपके लोकल डेवलपमेंट के लिए
+            "https://mobicloud-blog.shubhamtel.me", # आपका कस्टम डोमेन
+            "https://fullstack-blog-project-shubham-telis-projects.vercel.app" # आपका Vercel डोमेन
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }}
+)
+# =================================================================
+
+# लाइव सर्वर पर इमेज URL बनाने के लिए अपने बैकएंड का URL सेट करें
+# आप इसे Render के एनवायरनमेंट वेरिएबल्स में सेट कर सकते हैं
+BACKEND_BASE_URL = os.environ.get('BACKEND_BASE_URL', "http://localhost:5000")
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 instance_path = os.path.join(basedir, 'instance')
@@ -24,17 +41,16 @@ if not os.path.exists(UPLOAD_FOLDER_PROFILES): os.makedirs(UPLOAD_FOLDER_PROFILE
 app.config['UPLOAD_FOLDER_BLOGS'] = UPLOAD_FOLDER_BLOGS
 app.config['UPLOAD_FOLDER_PROFILES'] = UPLOAD_FOLDER_PROFILES
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-# Upar wali line ko comment karein ya delete karein aur yeh code add karein
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
-    # Yeh code sirf Render (Production Server) par chalega
+    # यह कोड सिर्फ Render (Production Server) पर चलेगा
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 else:
-    # Yeh code aapke local computer (Development) par chalega
+    # यह कोड आपके लोकल कंप्यूटर (Development) पर चलेगा
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'users.db')
-    
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -107,7 +123,6 @@ def upload_profile_image():
     if not user:
         return jsonify({"message": "User not found."}), 404
     
-    # Delete old image if it's not the default one
     if user.profile_image_url and 'default.png' not in user.profile_image_url:
         old_filename = os.path.basename(user.profile_image_url)
         _delete_file(app.config['UPLOAD_FOLDER_PROFILES'], old_filename)
@@ -140,14 +155,11 @@ def delete_author_post(post_id):
     post_to_delete = PendingBlog.query.get_or_404(post_id)
     user_id_from_request = request.get_json().get('userId')
 
-    # Authorization check
     if post_to_delete.user_id != user_id_from_request:
         return jsonify({"message": "You are not authorized to delete this post."}), 403
 
-    # Delete the associated image file
     _delete_file(app.config['UPLOAD_FOLDER_BLOGS'], post_to_delete.image_filename)
     
-    # Delete the record from the database
     db.session.delete(post_to_delete)
     db.session.commit()
     return jsonify({"message": "Your submission has been successfully deleted."}), 200
@@ -216,7 +228,6 @@ def approve_blog(pending_id):
         category=pending_blog.category
     )
     db.session.add(new_blog)
-    # Instead of deleting, we change status. This preserves the record for the author.
     pending_blog.status = 'approved'
     db.session.commit()
     return jsonify({"message": "Blog has been approved and published."}), 200
@@ -228,18 +239,10 @@ def reject_blog(pending_id):
     if not reason:
         return jsonify({"message": "Rejection reason is required."}), 400
     
-    # **FIX:** Delete the associated image file to prevent storage leak.
     _delete_file(app.config['UPLOAD_FOLDER_BLOGS'], pending_blog.image_filename)
     
-    # We delete the pending blog entry entirely after rejection
-    # If you want to keep it with a 'rejected' status, comment out the next two lines
-    # and uncomment the three lines after that.
     db.session.delete(pending_blog)
     db.session.commit()
-    
-    # pending_blog.status = 'rejected'
-    # pending_blog.rejection_reason = reason
-    # db.session.commit()
 
     return jsonify({"message": "Blog has been rejected and the submission removed."}), 200
 
@@ -277,7 +280,6 @@ def get_single_blog(blog_id):
 
 @app.route('/api/blogs/<int:blog_id>', methods=['PUT'])
 def update_blog(blog_id):
-    # **FIX:** Added Admin authorization check
     user_id = request.form.get('adminUserId')
     user = User.query.get(user_id)
     if not user or user.user_type != 'Admin':
@@ -289,11 +291,9 @@ def update_blog(blog_id):
     blog.category = request.form.get('category', blog.category)
     
     if 'image' in request.files and request.files['image'].filename != '':
-        # Delete old image
         old_filename = os.path.basename(blog.image_url)
         _delete_file(app.config['UPLOAD_FOLDER_BLOGS'], old_filename)
         
-        # Save new image
         file = request.files['image']
         unique_filename = str(datetime.now().timestamp()).replace(".", "") + "_" + secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER_BLOGS'], unique_filename))
@@ -304,7 +304,6 @@ def update_blog(blog_id):
 
 @app.route('/api/blogs/<int:blog_id>', methods=['DELETE'])
 def delete_blog(blog_id):
-    # **FIX:** Added Admin authorization check
     user_id = request.get_json().get('adminUserId')
     user = User.query.get(user_id)
     if not user or user.user_type != 'Admin':
@@ -312,12 +311,10 @@ def delete_blog(blog_id):
 
     blog = Blog.query.get_or_404(blog_id)
     
-    # Delete the associated image file
     if blog.image_url:
         filename = os.path.basename(blog.image_url)
         _delete_file(app.config['UPLOAD_FOLDER_BLOGS'], filename)
             
-    # Delete the blog record (comments are deleted via cascade)
     db.session.delete(blog)
     db.session.commit()
     return jsonify({'message': 'Blog deleted successfully'}), 200
@@ -364,7 +361,6 @@ def signup():
     db.session.commit()
     return jsonify({"message": "Account created successfully!"}), 201
 
-# **IMPROVEMENT:** Refactored login endpoints into one
 @app.route('/api/login', methods=['POST'])
 def unified_login():
     data = request.get_json()
