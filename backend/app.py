@@ -10,7 +10,6 @@ from datetime import datetime
 app = Flask(__name__)
 
 # ==================== CORS CONFIGURATION UPDATE ====================
-# यहाँ हमने आपके लाइव फ्रंटएंड URL's को जोड़ा है
 CORS(app,
     resources={r"/api/*": {
         "origins": [
@@ -24,8 +23,6 @@ CORS(app,
 )
 # =================================================================
 
-# लाइव सर्वर पर इमेज URL बनाने के लिए अपने बैकएंड का URL सेट करें
-# आप इसे Render के एनवायरनमेंट वेरिएबल्स में सेट कर सकते हैं
 BACKEND_BASE_URL = os.environ.get('BACKEND_BASE_URL', "http://localhost:5000")
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -45,10 +42,8 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
-    # यह कोड सिर्फ Render (Production Server) पर चलेगा
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 else:
-    # यह कोड आपके लोकल कंप्यूटर (Development) पर चलेगा
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'users.db')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -107,7 +102,6 @@ def _delete_file(folder, filename):
         print(f"Error deleting file {filename}: {e}")
 
 # --- API ENDPOINTS ---
-
 @app.route('/')
 def index():
     return jsonify({"status": "Backend server is running!"})
@@ -344,6 +338,10 @@ def delete_comment(comment_id):
 def signup():
     data = request.get_json()
     name, email, password, confirm_password, user_type = data.get('name'), data.get('email'), data.get('password'), data.get('confirmPassword'), data.get('userType')
+    
+    # --- यह नई लाइन जोड़ी गई है ---
+    print(f"--- SIGNUP ATTEMPT --- Email: {email}, UserType Received: {user_type}")
+    
     if not all([name, email, password, confirm_password, user_type]):
         return jsonify({"message": "All fields are required."}), 400
     if password != confirm_password:
