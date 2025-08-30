@@ -1,3 +1,5 @@
+// src/pages/SingleBlog.jsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
@@ -12,6 +14,9 @@ function SingleBlog() {
     const [newComment, setNewComment] = useState('');
     const [currentUser, setCurrentUser] = useState(null);
 
+    // FIX: Environment Variable को एक constant में store करें
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
     useEffect(() => {
         const user = localStorage.getItem('user');
         if (user) {
@@ -22,7 +27,8 @@ function SingleBlog() {
     const fetchBlog = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/api/blogs/${blogId}`);
+            // FIX: यहाँ localhost की जगह API_BASE_URL का उपयोग करें
+            const response = await fetch(`${API_BASE_URL}/api/blogs/${blogId}`);
             if (!response.ok) throw new Error('Could not find the blog!');
             const data = await response.json();
             setBlog(data);
@@ -31,7 +37,7 @@ function SingleBlog() {
         } finally {
             setLoading(false);
         }
-    }, [blogId]);
+    }, [blogId, API_BASE_URL]);
 
     useEffect(() => {
         fetchBlog();
@@ -41,7 +47,8 @@ function SingleBlog() {
         e.preventDefault();
         if (!newComment.trim() || !currentUser) return;
         try {
-            const response = await fetch(`http://localhost:5000/api/blogs/${blogId}/comments`, {
+            // FIX: यहाँ भी API_BASE_URL का उपयोग करें
+            const response = await fetch(`${API_BASE_URL}/api/blogs/${blogId}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content: newComment, userId: currentUser.id }),
@@ -60,7 +67,8 @@ function SingleBlog() {
     const handleCommentDelete = async (commentId) => {
         if (!currentUser || !window.confirm("Are you sure you want to delete this comment?")) return;
         try {
-            const response = await fetch(`http://localhost:5000/api/comments/${commentId}`, {
+            // FIX: और यहाँ भी API_BASE_URL का उपयोग करें
+            const response = await fetch(`${API_BASE_URL}/api/comments/${commentId}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: currentUser.id }),
@@ -89,10 +97,15 @@ function SingleBlog() {
                     <Link to="/home" className="back-link">← All Blogs</Link>
                     
                     <article className="blog-post">
-                        <div className="blog-hero"><img src={blog.image_url} alt={blog.title} /></div>
+                        {/* FIX: इमेज URL को सही करने के लिए ternary operator का उपयोग करें */}
+                        <div className="blog-hero">
+                          <img 
+                            src={blog.image_url.startsWith('http') ? blog.image_url : `${API_BASE_URL}${blog.image_url}`} 
+                            alt={blog.title} 
+                          />
+                        </div>
                         <div className="blog-header">
                             <h1 className="blog-title">{blog.title}</h1>
-                            {/* --- Author Meta block yahan se hata diya gaya hai --- */}
                         </div>
                         <div className="blog-content" dangerouslySetInnerHTML={{ __html: blog.content.replace(/\n/g, '<br />') }} />
                     </article>
