@@ -1,0 +1,112 @@
+/* --- Wrapper for the whole page to enable sticky footer --- */
+.my-posts-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Page will be at least 100% of the screen height */
+}
+
+.my-posts-container {
+  flex-grow: 1; /* This makes the container take up all available space, pushing the footer down */
+  padding: 2rem 1.5rem;
+  max-width: 900px;
+  margin: 40px auto;
+  width: 100%;
+}
+
+.my-posts-container h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* --- Style for the "no posts" and "loading" messages --- */
+.no-posts-message, .loading-message {
+  text-align: center;
+  padding: 3rem 0;
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+.post-item-wrapper {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.post-item {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.post-info h3 {
+  margin: 0 0 0.5rem 0;
+}
+
+.post-info p {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+.post-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: white;
+  text-transform: capitalize;
+}
+
+.status-pending {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.status-approved {
+  background-color: #28a745;
+}
+
+.status-rejected {
+  background-color: #dc3545;
+}
+
+/* --- .delete-btn ki styling yahan se hata di gayi hai --- */
+
+.rejection-reason {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f5c6cb;
+  font-size: 0.9rem;
+}
+
+
+/* Add this at the end of MyPosts.css */
+.delete-btn.item-actions {
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    color: white;
+    font-weight: bold;
+    white-space: nowrap;
+    background-color: #dc3545;
+}
+
+.delete-btn.item-actions:hover {
+    background-color: #c82333;
+}

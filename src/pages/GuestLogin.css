@@ -1,0 +1,38 @@
+.guest-login-container {
+    display: flex;
+    flex-direction: column; /* Upar se neeche */
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f2f5;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  .main-heading {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 30px;
+    font-weight: bold;
+  }
+  
+  .guest-login-card {
+    padding: 40px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  /* Baki styles jaise .input-group, button etc. pehle jaise hi hain */
+  .guest-login-card h2 { margin-bottom: 20px; color: #333; }
+  .input-group { margin-bottom: 20px; text-align: left; }
+  .input-group label { display: block; margin-bottom: 5px; color: #555; }
+  .input-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+  button { width: 100%; padding: 12px; background-color: #ffc107; color: #212529; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+  button:hover { background-color: #e0a800; }
+  .form-links { margin-top: 15px; text-align: center; }
+  .form-links a { color: #007bff; text-decoration: none; font-size: 14px; }
+  .form-links a:hover { text-decoration: underline; }

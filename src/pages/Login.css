@@ -1,0 +1,54 @@
+.login-container {
+    display: flex;
+    flex-direction: column; /* Upar se neeche */
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f2f5;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  .main-heading {
+    font-size: 2.5rem; /* Bada font size */
+    color: #333;
+    margin-bottom: 30px;
+    font-weight: bold;
+  }
+  
+  .login-card {
+    padding: 40px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  .login-card h2 { margin-bottom: 20px; color: #333; }
+  .input-group { margin-bottom: 20px; text-align: left; }
+  .input-group label { display: block; margin-bottom: 5px; color: #555; }
+  .input-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+  button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+  button:hover { background-color: #0056b3; }
+  
+  /* Naye links ke liye styling */
+  .extra-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    font-size: 14px;
+  }
+  .extra-links a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  .extra-links a:hover {
+    text-decoration: underline;
+  }
+  
+  @media (max-width: 480px) {
+    .login-card { padding: 25px; }
+    .main-heading { font-size: 2rem; }
+  }

@@ -1,0 +1,32 @@
+/* Browser ke default styles ko reset karna */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f4f7f6; /* Poori site ke liye thoda off-white background */
+  color: #333; /* Default text color */
+}
+
+/* Poori application ke liye box-sizing set karna taaki padding aur border width mein add na ho */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Common link styles (bina underline ke) */
+a {
+  color: #007bff; /* Links ke liye neela rang */
+  text-decoration: none; /* Neeche ki line hata di */
+  transition: color 0.2s ease-in-out;
+}
+
+/* Jab link par mouse le jaayein, to color thoda dark ho jaaye */
+a:hover {
+  color: #0056b3;
+}
+
+/* Headings ke liye common style */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+}
+
