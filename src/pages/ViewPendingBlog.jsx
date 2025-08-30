@@ -11,19 +11,27 @@ function ViewPendingBlog() {
     const [error, setError] = useState('');
 
     const fetchPendingBlog = useCallback(async () => {
-        try {
-            setLoading(true);
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/pending-blogs/${pendingId}`);
-            const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error('Could not find the pending blog!');
-            const data = await response.json();
-            setBlog(data);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
+    try {
+        setLoading(true);
+        setError(''); // Reset error on new fetch
+
+        // SIRF YEH EK LINE HONI CHAHIYE
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/admin/pending-blogs/${pendingId}`;
+        const response = await fetch(apiUrl);
+
+        if (!response.ok) {
+            throw new Error('Could not find the pending blog!');
         }
-    }, [pendingId]);
+
+        const data = await response.json();
+        setBlog(data);
+
+    } catch (err) {
+        setError(err.message);
+    } finally {
+        setLoading(false);
+    }
+}, [pendingId]);
 
     useEffect(() => {
         fetchPendingBlog();
