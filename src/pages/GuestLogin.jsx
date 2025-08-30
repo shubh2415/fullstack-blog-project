@@ -17,7 +17,7 @@ function GuestLogin() {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, user: 'guest' }),
+        body: JSON.stringify({ email, password, loginType: 'guest' }),
       });
       const data = await response.json();
       if (response.ok) {
