@@ -16,7 +16,7 @@ function Footer() {
         <div className="footer-section">
           <h4>Follow Us</h4>
           <div className="social-links">
-            <a href="www.linkedin.com/in/shubham-teli-2415s">Linkedin</a> | <a href="#">Github</a> | <a href="https://www.instagram.com/shubham_maratha9990/">Instagram</a>
+            <a href="https://www.linkedin.com/in/shubham-teli-2415s">Linkedin</a> | <a href="https://github.com/shubh2415">Github</a> | <a href="https://www.instagram.com/shubham_maratha9990/">Instagram</a>
           </div>
         </div>
       </div>
