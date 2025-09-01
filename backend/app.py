@@ -58,7 +58,7 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     user_type = db.Column(db.String(50), nullable=False)
-    profile_image_url = db.Column(db.String(300), nullable=True, default='https://res.cloudinary.com/demo/image/upload/w_100,h_100,c_thumb,g_face,r_max/face_left.png')
+    profile_image_url = db.Column(db.String(300), nullable=True, default='https://res.cloudinary.com/dotihdxrh/image/upload/v1756727796/0684456b-aa2b-4631-86f7-93ceaf33303c_dfpc4d.jpg')
     profile_image_public_id = db.Column(db.String(200), nullable=True) # To store Cloudinary public_id
     blogs = db.relationship('Blog', backref='author', lazy=True)
     comments = db.relationship('Comment', backref='commenter', lazy=True)
