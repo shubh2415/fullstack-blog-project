@@ -5,6 +5,9 @@ from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import os
 from datetime import datetime
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # --- App Initialization and Config ---
 app = Flask(__name__)
@@ -23,20 +26,19 @@ CORS(app,
 )
 # =================================================================
 
+# --- Cloudinary Configuration ---
+cloudinary.config(
+  cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME'),
+  api_key = os.environ.get('CLOUDINARY_API_KEY'),
+  api_secret = os.environ.get('CLOUDINARY_API_SECRET')
+)
+
 BACKEND_BASE_URL = os.environ.get('BACKEND_BASE_URL', "http://localhost:5000")
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 instance_path = os.path.join(basedir, 'instance')
 if not os.path.exists(instance_path): os.makedirs(instance_path)
 
-# --- Upload Folders ---
-UPLOAD_FOLDER_BLOGS = os.path.join(basedir, 'static/uploads/blogs')
-UPLOAD_FOLDER_PROFILES = os.path.join(basedir, 'static/uploads/profiles')
-if not os.path.exists(UPLOAD_FOLDER_BLOGS): os.makedirs(UPLOAD_FOLDER_BLOGS)
-if not os.path.exists(UPLOAD_FOLDER_PROFILES): os.makedirs(UPLOAD_FOLDER_PROFILES)
-
-app.config['UPLOAD_FOLDER_BLOGS'] = UPLOAD_FOLDER_BLOGS
-app.config['UPLOAD_FOLDER_PROFILES'] = UPLOAD_FOLDER_PROFILES
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -56,7 +58,8 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     user_type = db.Column(db.String(50), nullable=False)
-    profile_image_url = db.Column(db.String(300), nullable=True, default='/static/uploads/profiles/default.png')
+    profile_image_url = db.Column(db.String(300), nullable=True, default='https://res.cloudinary.com/demo/image/upload/w_100,h_100,c_thumb,g_face,r_max/face_left.png')
+    profile_image_public_id = db.Column(db.String(200), nullable=True) # To store Cloudinary public_id
     blogs = db.relationship('Blog', backref='author', lazy=True)
     comments = db.relationship('Comment', backref='commenter', lazy=True)
     pending_blogs = db.relationship('PendingBlog', backref='author', lazy=True)
@@ -66,6 +69,7 @@ class Blog(db.Model):
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
     image_url = db.Column(db.String(300), nullable=False)
+    image_public_id = db.Column(db.String(200), nullable=False) # To store Cloudinary public_id
     category = db.Column(db.String(50), nullable=False, default='General')
     pub_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -82,7 +86,8 @@ class PendingBlog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    image_filename = db.Column(db.String(300), nullable=False)
+    image_public_id = db.Column(db.String(200), nullable=False) # Changed from filename
+    image_url = db.Column(db.String(300), nullable=False) # Storing the URL
     category = db.Column(db.String(50), nullable=False, default='General')
     status = db.Column(db.String(50), nullable=False, default='pending')
     rejection_reason = db.Column(db.Text, nullable=True)
@@ -90,16 +95,14 @@ class PendingBlog(db.Model):
     submitted_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 # --- Helper Functions ---
-def _delete_file(folder, filename):
-    """Helper to safely delete a file."""
-    if not filename: return
+def _delete_from_cloudinary(public_id):
+    """Helper to safely delete a file from Cloudinary."""
+    if not public_id: return
     try:
-        file_path = os.path.join(folder, filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            print(f"Successfully deleted file: {file_path}")
+        cloudinary.uploader.destroy(public_id)
+        print(f"Successfully deleted from Cloudinary: {public_id}")
     except Exception as e:
-        print(f"Error deleting file {filename}: {e}")
+        print(f"Error deleting from Cloudinary {public_id}: {e}")
 
 # --- API ENDPOINTS ---
 @app.route('/')
@@ -117,18 +120,19 @@ def upload_profile_image():
     if not user:
         return jsonify({"message": "User not found."}), 404
     
-    if user.profile_image_url and 'default.png' not in user.profile_image_url:
-        old_filename = os.path.basename(user.profile_image_url)
-        _delete_file(app.config['UPLOAD_FOLDER_PROFILES'], old_filename)
+    # Delete old image from Cloudinary if it's not the default one
+    if user.profile_image_public_id:
+        _delete_from_cloudinary(user.profile_image_public_id)
         
-    unique_filename = str(datetime.now().timestamp()).replace(".", "") + "_" + secure_filename(file.filename)
-    file.save(os.path.join(app.config['UPLOAD_FOLDER_PROFILES'], unique_filename))
+    # Upload new image to Cloudinary
+    upload_result = cloudinary.uploader.upload(file, folder="blog_profiles")
+    user.profile_image_url = upload_result['secure_url']
+    user.profile_image_public_id = upload_result['public_id']
     
-    user.profile_image_url = f"/static/uploads/profiles/{unique_filename}"
     db.session.commit()
     return jsonify({
         "message": "Profile image updated successfully.",
-        "profile_image_url": f"{BACKEND_BASE_URL}{user.profile_image_url}"
+        "profile_image_url": user.profile_image_url
     }), 200
 
 # --- Guest Author Endpoints ---
@@ -152,7 +156,7 @@ def delete_author_post(post_id):
     if post_to_delete.user_id != user_id_from_request:
         return jsonify({"message": "You are not authorized to delete this post."}), 403
 
-    _delete_file(app.config['UPLOAD_FOLDER_BLOGS'], post_to_delete.image_filename)
+    _delete_from_cloudinary(post_to_delete.image_public_id)
     
     db.session.delete(post_to_delete)
     db.session.commit()
@@ -165,10 +169,16 @@ def submit_blog():
     if not all([file, title, content, user_id]):
         return jsonify({"message": "All fields including an image are required."}), 400
     
-    unique_filename = str(datetime.now().timestamp()).replace(".", "") + "_" + secure_filename(file.filename)
-    file.save(os.path.join(app.config['UPLOAD_FOLDER_BLOGS'], unique_filename))
+    upload_result = cloudinary.uploader.upload(file, folder="blog_images")
     
-    new_pending_blog = PendingBlog(title=title, content=content, image_filename=unique_filename, user_id=user_id, category=category)
+    new_pending_blog = PendingBlog(
+        title=title, 
+        content=content, 
+        image_public_id=upload_result['public_id'], 
+        image_url=upload_result['secure_url'],
+        user_id=user_id, 
+        category=category
+    )
     db.session.add(new_pending_blog)
     db.session.commit()
     return jsonify({"message": "Blog submitted successfully for review."}), 201
@@ -184,10 +194,16 @@ def admin_create_blog():
     if not user or user.user_type != 'Admin':
         return jsonify({"message": "Only admins can create blogs directly."}), 403
     
-    unique_filename = str(datetime.now().timestamp()).replace(".", "") + "_" + secure_filename(file.filename)
-    file.save(os.path.join(app.config['UPLOAD_FOLDER_BLOGS'], unique_filename))
+    upload_result = cloudinary.uploader.upload(file, folder="blog_images")
     
-    new_blog = Blog(title=title, content=content, image_url=f"/static/uploads/blogs/{unique_filename}", user_id=user_id, category=category)
+    new_blog = Blog(
+        title=title, 
+        content=content, 
+        image_url=upload_result['secure_url'], 
+        image_public_id=upload_result['public_id'],
+        user_id=user_id, 
+        category=category
+    )
     db.session.add(new_blog)
     db.session.commit()
     return jsonify({"message": "Blog created and published successfully."}), 201
@@ -204,10 +220,10 @@ def get_single_pending_blog(pending_id):
         'id': pending_blog.id,
         'title': pending_blog.title,
         'content': pending_blog.content,
-        'image_url': f"{BACKEND_BASE_URL}/static/uploads/blogs/{pending_blog.image_filename}",
+        'image_url': pending_blog.image_url,
         'category': pending_blog.category,
         'author_name': pending_blog.author.name,
-        'author_image_url': f"{BACKEND_BASE_URL}{pending_blog.author.profile_image_url}",
+        'author_image_url': pending_blog.author.profile_image_url,
         'submitted_date': pending_blog.submitted_date.strftime('%d %B %Y')
     })
 
@@ -217,12 +233,14 @@ def approve_blog(pending_id):
     new_blog = Blog(
         title=pending_blog.title, 
         content=pending_blog.content, 
-        image_url=f"/static/uploads/blogs/{pending_blog.image_filename}", 
+        image_url=pending_blog.image_url, 
+        image_public_id=pending_blog.image_public_id,
         user_id=pending_blog.user_id, 
         category=pending_blog.category
     )
     db.session.add(new_blog)
-    pending_blog.status = 'approved'
+    # Instead of deleting, we change status. You can also delete if you prefer.
+    pending_blog.status = 'approved' 
     db.session.commit()
     return jsonify({"message": "Blog has been approved and published."}), 200
 
@@ -233,8 +251,11 @@ def reject_blog(pending_id):
     if not reason:
         return jsonify({"message": "Rejection reason is required."}), 400
     
-    _delete_file(app.config['UPLOAD_FOLDER_BLOGS'], pending_blog.image_filename)
+    # Delete from Cloudinary
+    _delete_from_cloudinary(pending_blog.image_public_id)
     
+    # You can either delete the pending blog or mark it as rejected
+    # Here we delete it
     db.session.delete(pending_blog)
     db.session.commit()
 
@@ -251,7 +272,7 @@ def get_blogs():
     if category and category.lower() != 'all':
         query = query.filter_by(category=category)
     blogs = query.order_by(Blog.pub_date.desc()).all()
-    return jsonify({'blogs': [{'id': blog.id, 'title': blog.title, 'content_snippet': blog.content[:100] + '...','image_url': f"{BACKEND_BASE_URL}{blog.image_url}",'pub_date': blog.pub_date.strftime('%d %B %Y'), 'author_name': blog.author.name, 'category': blog.category} for blog in blogs]})
+    return jsonify({'blogs': [{'id': blog.id, 'title': blog.title, 'content_snippet': blog.content[:100] + '...','image_url': blog.image_url,'pub_date': blog.pub_date.strftime('%d %B %Y'), 'author_name': blog.author.name, 'category': blog.category} for blog in blogs]})
 
 @app.route('/api/blogs/<int:blog_id>', methods=['GET'])
 def get_single_blog(blog_id):
@@ -260,15 +281,15 @@ def get_single_blog(blog_id):
         [{
             'id': c.id, 'content': c.content, 'pub_date': c.pub_date.strftime('%d %B %Y'), 
             'commenter_name': c.commenter.name, 'commenter_id': c.commenter.id, 
-            'commenter_image_url': f"{BACKEND_BASE_URL}{c.commenter.profile_image_url}"
+            'commenter_image_url': c.commenter.profile_image_url
         } for c in blog.comments],
         key=lambda c: c['pub_date'], reverse=True
     )
     return jsonify({
         'id': blog.id, 'title': blog.title, 'content': blog.content, 
-        'image_url': f"{BACKEND_BASE_URL}{blog.image_url}", 'category': blog.category,
+        'image_url': blog.image_url, 'category': blog.category,
         'pub_date': blog.pub_date.strftime('%d %B %Y'), 'author_name': blog.author.name, 
-        'author_image_url': f"{BACKEND_BASE_URL}{blog.author.profile_image_url}",
+        'author_image_url': blog.author.profile_image_url,
         'comments': comments_output
     })
 
@@ -285,13 +306,14 @@ def update_blog(blog_id):
     blog.category = request.form.get('category', blog.category)
     
     if 'image' in request.files and request.files['image'].filename != '':
-        old_filename = os.path.basename(blog.image_url)
-        _delete_file(app.config['UPLOAD_FOLDER_BLOGS'], old_filename)
+        # Delete old image from Cloudinary
+        _delete_from_cloudinary(blog.image_public_id)
         
+        # Upload new image
         file = request.files['image']
-        unique_filename = str(datetime.now().timestamp()).replace(".", "") + "_" + secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER_BLOGS'], unique_filename))
-        blog.image_url = f"/static/uploads/blogs/{unique_filename}"
+        upload_result = cloudinary.uploader.upload(file, folder="blog_images")
+        blog.image_url = upload_result['secure_url']
+        blog.image_public_id = upload_result['public_id']
         
     db.session.commit()
     return jsonify({"message": "Blog updated successfully."}), 200
@@ -305,9 +327,8 @@ def delete_blog(blog_id):
 
     blog = Blog.query.get_or_404(blog_id)
     
-    if blog.image_url:
-        filename = os.path.basename(blog.image_url)
-        _delete_file(app.config['UPLOAD_FOLDER_BLOGS'], filename)
+    if blog.image_public_id:
+        _delete_from_cloudinary(blog.image_public_id)
             
     db.session.delete(blog)
     db.session.commit()
@@ -339,7 +360,6 @@ def signup():
     data = request.get_json()
     name, email, password, confirm_password, user_type = data.get('name'), data.get('email'), data.get('password'), data.get('confirmPassword'), data.get('userType')
     
-    # --- यह नई लाइन जोड़ी गई है ---
     print(f"--- SIGNUP ATTEMPT --- Email: {email}, UserType Received: {user_type}")
     
     if not all([name, email, password, confirm_password, user_type]):
@@ -364,7 +384,7 @@ def unified_login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
-    login_type = data.get('loginType') # 'user', 'guest', or 'admin'
+    login_type = data.get('loginType')
 
     user = User.query.filter_by(email=email).first()
 
@@ -385,7 +405,7 @@ def unified_login():
         "name": user.name,
         "email": user.email,
         "user_type": user.user_type,
-        "profile_image_url": f"{BACKEND_BASE_URL}{user.profile_image_url}" if user.profile_image_url else None
+        "profile_image_url": user.profile_image_url
     }
     return jsonify({"message": "Login successful!", "user": user_data}), 200
 
