@@ -60,7 +60,7 @@ From Singapore to Copenhagen, these urban models are proving that a better futur
 It's a crucial news story that gives us hope for the planet. 🙏
 This is a developing story, showing how human innovation can solve our biggest challenges.
 The future of city living is green, and it's happening right now.""",
-                image_url=dummy_image_url,
+                image_url="https://res.cloudinary.com/dotihdxrh/image/upload/v1756725524/cityscape-wuxi_11zon_e0uar7.jpg",
                 image_public_id=dummy_image_public_id,
                 author=admin,
                 category="News"
@@ -80,7 +80,7 @@ Of course, there are challenges to figure out, like scheduling for customer-faci
 But the conversation is growing louder and many leaders are taking it seriously.
 This news is a sign of a major cultural shift in our approach to work.
 It asks us: could we achieve more by working less? 🤔""",
-                image_url=dummy_image_url,
+                image_url="https://res.cloudinary.com/dotihdxrh/image/upload/v1756725523/finger_1_wq98ay.jpg",
                 image_public_id=dummy_image_public_id,
                 author=admin,
                 category="News"
@@ -100,7 +100,7 @@ This technology aims to free up your time from small, daily tasks.
 So you can focus on what’s truly important to you.
 Welcome to a future where your digital assistant is as helpful as a real person.
 The next generation of AI is not just smart; it's intuitive. ✨""",
-                image_url=dummy_image_url,
+                image_url="https://res.cloudinary.com/dotihdxrh/image/upload/v1756725523/ai_1_id4q4b.jpg",
                 image_public_id=dummy_image_public_id,
                 author=admin,
                 category="Tech"
