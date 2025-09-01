@@ -120,7 +120,7 @@ Starting your day early can also lead to increased productivity. 🚀
 You have more time to exercise, read, or work on a personal project.
 Embrace the stillness and make the most of this golden hour. 🌟
 It’s a simple change that can have a big impact on your life.""",
-                image_url=https://res.cloudinary.com/dotihdxrh/image/upload/v1756724812/morning_1_hcvckk.jpg,
+                image_url="https://res.cloudinary.com/dotihdxrh/image/upload/v1756724812/morning_1_hcvckk.jpg",
                 image_public_id=dummy_image_public_id,
                 author=admin,
                 category="General"
