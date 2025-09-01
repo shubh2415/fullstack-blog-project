@@ -44,17 +44,21 @@
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
-/* --- Category Filter Styles for DESKTOP --- */
+/* --- FINAL CSS FIX: Mobile First Approach --- */
+
+/* Step 1: Default styles for MOBILE (Column Layout) */
 .category-filters {
   display: flex;
-  flex-direction: row; /* Default direction is row */
-  justify-content: center;
-  gap: 1rem;
+  flex-direction: column; /* Mobile par default column hoga */
+  align-items: center;   /* Buttons ko center mein rakhega */
+  gap: 0.75rem;          /* Buttons ke beech mein vertical space */
   margin-bottom: 3rem;
-  flex-wrap: wrap; /* Good for tablets */
 }
 
 .category-filters button {
+  width: 90%; /* Mobile par button ki chaudi */
+  max-width: 350px;
+  text-align: center;
   padding: 0.6rem 1.5rem;
   font-size: 1rem;
   font-weight: 500;
@@ -64,7 +68,6 @@
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-  flex-shrink: 0;
 }
 
 .category-filters button:hover {
@@ -77,6 +80,22 @@
   color: #fff;
   border-color: #007bff;
 }
+
+/* Step 2: Styles ONLY for LAPTOP/DESKTOP (Row Layout) */
+@media (min-width: 769px) {
+  .category-filters {
+    flex-direction: row; /* Badi screen par ROW mein badal do */
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .category-filters button {
+    width: auto; /* Button ki width content ke hisaab se hogi */
+    max-width: none;
+  }
+}
+
 
 .blogs-grid {
   display: grid;
@@ -134,26 +153,5 @@
   justify-content: space-between;
   font-size: 0.9rem;
   color: #6c757d;
-}
-
-/* --- FINAL FIX: Media Query for MOBILE Screens --- */
-@media (max-width: 768px) { /* Mobile aur small tablet ke liye */
-  .home-header h1 {
-    font-size: 2.5rem;
-  }
-
-  .category-filters {
-    /* --- YEH LINE BUTTONS KO COLUMN MEIN BADAL DEGI --- */
-    flex-direction: column; 
-    /* --- Buttons ko column ke center mein rakhegi --- */
-    align-items: center; 
-    gap: 0.75rem; /* Buttons ke beech mein vertical gap */
-  }
-
-  .category-filters button {
-    width: 90%; /* Buttons ko thoda chauda kar diya */
-    max-width: 350px; /* Lekin bahut zyada chauda nahi */
-    text-align: center; /* Text ko center mein rakha */
-  }
 }
 
