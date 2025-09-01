@@ -46,11 +46,12 @@
 
 /* --- Category Filter Styles --- */
 .category-filters {
-  display: flex;            /* यह बटन्स को एक row में लाता है। */
-  justify-content: center;  /* यह पूरी row को पेज के center में ले आता है। */
-  gap: 1rem;                /* यह हर बटन के बीच में 1rem का बराबर space डालता है। */
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
   margin-bottom: 3rem;
-        /* यह सुनिश्चित करता है कि छोटी स्क्रीन पर बटन नीचे आ जाएं। */
+  /* --- FIX: Yeh line buttons ko agli line mein aane degi jab jagah kam ho --- */
+  flex-wrap: wrap; 
 }
 
 .category-filters button {
@@ -63,6 +64,8 @@
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  /* --- FIX: Yeh buttons ko ajeeb tarike se sikudne se rokega --- */
+  flex-shrink: 0; 
 }
 
 .category-filters button:hover {
@@ -132,4 +135,20 @@
   justify-content: space-between;
   font-size: 0.9rem;
   color: #6c757d;
+}
+
+/* --- NEW: Media Query for Mobile Screens --- */
+@media (max-width: 600px) {
+  .home-header h1 {
+    font-size: 2.5rem; /* Thoda chhota font size */
+  }
+
+  .category-filters {
+    gap: 0.5rem; /* Buttons ke beech mein thodi kam jagah */
+  }
+
+  .category-filters button {
+    padding: 0.5rem 1rem; /* Buttons ko thoda chhota kiya */
+    font-size: 0.9rem; /* Font size bhi thoda kam */
+  }
 }
