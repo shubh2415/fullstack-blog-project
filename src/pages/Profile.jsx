@@ -85,7 +85,7 @@ function Profile() {
                     <h2>My Profile</h2>
                     <form onSubmit={handleSubmit}>
                         <div className="profile-image-section">
-                            <img src={previewImage || '/static/uploads/profiles/default.png'} alt="Profile Preview" className="profile-preview" />
+                            <img src={previewImage || 'https://i.ibb.co/6881v2D/default-avatar.png'} alt="Profile Preview" className="profile-preview" />
                             <label htmlFor="profile-image-upload" className="upload-button">
                                 Choose Image
                             </label>
