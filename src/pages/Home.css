@@ -33,7 +33,7 @@
   padding: 0.8rem 1.2rem;
   font-size: 1rem;
   border: 1px solid #ced4da;
-  border-radius: 50px; /* Pill shape */
+  border-radius: 50px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -44,14 +44,14 @@
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
-/* --- Category Filter Styles --- */
+/* --- Category Filter Styles for DESKTOP --- */
 .category-filters {
   display: flex;
+  flex-direction: row; /* Default direction is row */
   justify-content: center;
   gap: 1rem;
   margin-bottom: 3rem;
-  /* --- FIX: Yeh line buttons ko agli line mein aane degi jab jagah kam ho --- */
-  flex-wrap: wrap; 
+  flex-wrap: wrap; /* Good for tablets */
 }
 
 .category-filters button {
@@ -64,8 +64,7 @@
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-  /* --- FIX: Yeh buttons ko ajeeb tarike se sikudne se rokega --- */
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
 .category-filters button:hover {
@@ -137,18 +136,23 @@
   color: #6c757d;
 }
 
-/* --- NEW: Media Query for Mobile Screens --- */
-@media (max-width: 600px) {
+/* --- FINAL FIX: Media Query for MOBILE Screens --- */
+@media (max-width: 768px) { /* Mobile aur small tablet ke liye */
   .home-header h1 {
-    font-size: 2.5rem; /* Thoda chhota font size */
+    font-size: 2.5rem;
   }
 
   .category-filters {
-    gap: 0.5rem; /* Buttons ke beech mein thodi kam jagah */
+    /* --- YEH LINE BUTTONS KO COLUMN MEIN BADAL DEGI --- */
+    flex-direction: column; 
+    /* --- Buttons ko column ke center mein rakhegi --- */
+    align-items: center; 
+    gap: 0.75rem; /* Buttons ke beech mein vertical gap */
   }
 
   .category-filters button {
-    padding: 0.5rem 1rem; /* Buttons ko thoda chhota kiya */
-    font-size: 0.9rem; /* Font size bhi thoda kam */
+    width: 90%; /* Buttons ko thoda chauda kar diya */
+    max-width: 350px; /* Lekin bahut zyada chauda nahi */
+    text-align: center; /* Text ko center mein rakha */
   }
 }
